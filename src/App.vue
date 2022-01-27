@@ -1,7 +1,8 @@
 <template>
   <div id="app">
-    <Chart :styles="myStyles" :chart-data="datacollection" :options="options"></Chart>
-    <button type="button" @click="extend()">拡張</button>
+    <div class="scrollable">
+       <Chart :styles="myStyles" :chart-data="datacollection" :options="options"></Chart>
+    </div>
     <div class="form-wrapper"><form><input type="text" v-model="value"><button type="button" @click="fillData()">更新</button></form></div>
   </div>
 </template>
@@ -39,10 +40,18 @@ export default {
           yAxes: [{
             ticks: {
                 min: -80,
-                max: -30
+                max: -30,
+            }
+          }],
+          xAxes: [{
+            ticks: {
+              stepSize: 1000000,
+              callback: function(label, index, labels) {
+                return (label - labels[0]) / 1000000;
+              }
             }
           }]
-        }
+        },
       },
       chartWidth: window.innerWidth-50,
       chartHeight: window.innerHeight-100,
@@ -63,7 +72,7 @@ export default {
       ])
       let maxWidth = 0;
       log.forEach((d, i) => {
-        d['radius'] = 1
+        d['radius'] = 1.5
         d['backgroundColor'] = dataColors[i%dataColors.length]
         d['borderWidth'] = 0
         maxWidth = maxWidth < d['data'].length * 5 ? d['data'].length * 5 : maxWidth
@@ -77,7 +86,17 @@ export default {
       this.datacollection = {
         datasets: [...log, ...result]
       }
-      this.chartWidth = maxWidth
+      const right = (() => {
+        const d0 = Math.floor(log[0]['data'][log[0]['data']['length']-1]['x']/1000000)+1
+        const d1 = Math.floor(log[1]['data'][log[1]['data']['length']-1]['x']/1000000)+1
+        return d0 > d1 ? d0 : d1
+      })()
+      const left = (() => {
+        const d0 = Math.floor(log[0]['data'][0]['x']/1000000)
+        const d1 = Math.floor(log[1]['data'][0]['x']/1000000)
+        return d0 > d1 ? d1 : d0
+      })()
+      this.chartWidth = (right - left) * 50
     }
   },
   computed: {
@@ -127,5 +146,8 @@ form button {
   background: midnightblue;
   border-radius: 0 5px 5px 0;
   padding: 0 10px;
+}
+.scrollable {
+  overflow: scroll;
 }
 </style>
