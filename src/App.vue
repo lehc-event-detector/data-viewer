@@ -11,15 +11,15 @@
 import Chart from './components/Chart.vue'
 
 const dataColors = [
-  'rgba(27, 210, 55, 0.8)',
-  'rgba(93, 43, 201, 0.8)',
+  'rgba(27, 210, 55)',
+  'rgba(93, 43, 201)',
   'rgba(213, 157, 71, 0.8)',
   'rgba(155, 148, 221, 0.8)',
   'rgba(186, 42, 147, 0.8)'
 ]
 
 const resultColors = [
-  'rgba(255, 0, 0, 0.8)',
+  'rgba(255, 0, 0)',
   'rgba(0, 255, 0, 0.8)',
   'rgba(0, 0, 255, 0.8)'
 ]
@@ -31,6 +31,9 @@ export default {
   },
   data () {
     return {
+      val: 0,
+      val2: 0,
+      index: 0,
       datacollection: {},
       options: {
         responsive: true,
@@ -52,6 +55,15 @@ export default {
             }
           }]
         },
+        onClick: (e, el) => {
+          if (el[0]._datasetIndex === 0) {
+            this.val += parseInt(this.datacollection.datasets[el[0]._datasetIndex].data[el[0]._index].x)
+          } else {
+            this.val2 += parseInt(this.datacollection.datasets[el[0]._datasetIndex].data[el[0]._index].x)
+            this.index++
+          }
+          console.log(this.val,this.val2, (this.val2-this.val)/this.index)
+        }
       },
       chartWidth: window.innerWidth-50,
       chartHeight: window.innerHeight-100,
@@ -70,33 +82,37 @@ export default {
         fetch(`/log/${gid}?db=${db}`).then(res => res.json()),
         fetch(`/result/${gid}?db=${db}`).then(res => res.json())
       ])
+      // console.log(log)
       let maxWidth = 0;
-      log.forEach((d, i) => {
-        d['radius'] = 1.5
-        d['backgroundColor'] = dataColors[i%dataColors.length]
-        d['borderWidth'] = 0
-        maxWidth = maxWidth < d['data'].length * 5 ? d['data'].length * 5 : maxWidth
-      })
       result.forEach((d, i) => {
-        d['radius'] = 3
+        d['radius'] = 6
         d['backgroundColor'] = resultColors[i%resultColors.length]
         d['borderWidth'] = 0
-        maxWidth = maxWidth < d['data'].length * 5 ? d['data'].length * 5 : maxWidth
+        d['order'] = 99
+      })
+      log.forEach((d, i) => {
+        d['radius'] = 2
+        d['backgroundColor'] = dataColors[i%dataColors.length]
+        d['borderWidth'] = 0
       })
       this.datacollection = {
-        datasets: [...log, ...result]
+        datasets: [...result, ...log]
       }
       const right = (() => {
         const d0 = Math.floor(log[0]['data'][log[0]['data']['length']-1]['x']/1000000)+1
-        const d1 = Math.floor(log[1]['data'][log[1]['data']['length']-1]['x']/1000000)+1
-        return d0 > d1 ? d0 : d1
+        // const d1 = Math.floor(log[1]['data'][log[1]['data']['length']-1]['x']/1000000)+1
+        // return d0 > d1 ? d0 : d1
+        return d0
       })()
       const left = (() => {
         const d0 = Math.floor(log[0]['data'][0]['x']/1000000)
-        const d1 = Math.floor(log[1]['data'][0]['x']/1000000)
-        return d0 > d1 ? d1 : d0
+        // const d1 = Math.floor(log[1]['data'][0]['x']/1000000)
+        // return d0 > d1 ? d1 : d0
+        return d0
       })()
-      this.chartWidth = (right - left) * 50
+
+      this.chartWidth = (right - left) * 30
+      this.chartHeight = 700
     }
   },
   computed: {
